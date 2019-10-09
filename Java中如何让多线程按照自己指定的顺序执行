@@ -1,0 +1,48 @@
+1、Java中如何让多线程按照自己指定的顺序执行？
+方法1：
+通过thread.join的方法来实现
+
+thread.join的含义为，当主线程创建子线程，调用子线程的start的方法，这时子线程是运行状态，然后主线程调用子线程的join方法，主线程陷入阻塞，
+等到子线程执行完毕，然后在唤醒主线程，继续执行下边的子线程。
+package com.inspur.thread;
+
+public class ThreadOrder {
+    static Thread thread1 = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            System.out.println("thread1执行");
+        }
+    });
+    static Thread thread2 = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            System.out.println("thread2执行");
+        }
+    });
+    static Thread thread3 = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            System.out.println("thread3执行");
+        }
+    });
+
+    public static void main(String[] args) throws InterruptedException {
+        thread1.start();
+        thread1.join();
+        thread2.start();
+        thread2.join();
+        thread3.start();
+    }
+
+}
+
+从join方法的源码来看，join方法的本质调用的是Object中的wait方法实现线程的阻塞。调用wait方法必须要获取锁，所以join方法是被synchronized修饰的，
+synchronized修饰在方法层面相当于synchronized(this)，（后续补充这一块）
+主线程会持有对象的锁，然后调用wait方法去阻塞，而这个方法的调用者是在主线程中的。所以造成主线程阻塞。
+
+方法2：
+使用ExecutorService ,利用newSingleThreadExecutor，这个线程池，其实是队列，使线程进入队列进行排队执行
+ ExecutorService executorService = Executors.newSingleThreadExecutor();
+ executorService.submit(thread1);
+ executorService.submit(thread2);
+ executorService.submit(thread3);
